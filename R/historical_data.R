@@ -27,30 +27,24 @@ HistData <- function(tickers = "GS US",
   
   tickers.type <- paste(tickers, type, sep = " ")
   
-  if(is.null(currency)) {  
-    option.names  <- c("periodicitySelection",
-                       "nonTradingDayFillOption",
-                       "nonTradingDayFillMethod",
-                       "periodicityAdjustment",
-                       "adjustmentFollowDPDF")
-    option.values <- c(freq,
-                       non.trading.days,
-                       non.trading.days.fill,
-                       calendar.type,
-                       "TRUE")
-  } else {
-    option.names <- c("periodicitySelection",
-                      "currency",
-                      "nonTradingDayFillOption",
-                      "nonTradingDayFillMethod",
-                      "periodicityAdjustment",
-                      "adjustmentFollowDPDF")
-    option.values <- c(freq,
-                       currency,
-                       non.trading.days,
-                       non.trading.days.fill,
-                       calendar.type,
-                       "TRUE")
+  option.names <- c("periodicitySelection",
+                    "nonTradingDayFillOption",
+                    "nonTradingDayFillMethod",
+                    "periodicityAdjustment",
+                    "adjustmentFollowDPDF",
+                    "currency")
+  
+  option.values <- c(freq,
+                     non.trading.days,
+                     non.trading.days.fill,
+                     calendar.type,
+                     "TRUE",
+                     currency)
+  
+  if(is.null(currency)) {
+    
+    option.names <- option.names[-which(option.names == "currency")]
+    
   }
   
   conn <- blpConnect()
@@ -164,16 +158,6 @@ HistData <- function(tickers = "GS US",
         dates.match <- match(bbg.data[ticker.pos, "date"], as.character(dates))
         
         adj.data[dates.match, i] <- bbg.data[ticker.pos, 3]
-        
-        if(active.tickers[i, "TRADE_STATUS"]) {
-          
-          adj.data[, i] <- na.locf(adj.data[, i])
-          
-        } else {
-          
-          adj.data[, i] <- na.locf(adj.data[, i], fromLast = TRUE, maxgap = 1)
-          
-        }
         
       }
       
@@ -323,18 +307,6 @@ HistData <- function(tickers = "GS US",
         temp.bbg <- bbg.data[ticker.pos, -1:-2]
         
         adj.data[dates.match, i, ] <- data.matrix(temp.bbg)
-        
-        if(active.tickers[i, "TRADE_STATUS"]) {
-          
-          adj.data[, i, ] <- na.locf(xts(adj.data[, i, ], order.by = dates))
-          
-        } else {
-          
-          adj.data[, i, ] <- na.locf(xts(adj.data[, i, ], order.by = dates),
-                                     fromLast = TRUE,
-                                     maxgap = 1)
-          
-        }
         
       }
       

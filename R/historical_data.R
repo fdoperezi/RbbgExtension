@@ -11,6 +11,7 @@
 #' @import Rbbg
 #' @import xts
 #' @import zoo
+#' @import stringr
 
 HistData <- function(tickers = "GS US",
                      type = "Equity",
@@ -201,7 +202,67 @@ HistData <- function(tickers = "GS US",
   
   if(calendar.type == "FISCAL") {
     
+    adj.data <- vector("list", length(tickers))
     
+    names(adj.data) <- tickers
+    
+    primary.period <- bdp(conn = conn,
+                          securities = tickers.type,
+                          fields = "PRIMARY_PERIODICITY")
+    
+    primary.period <- ifelse(str_detect(primary.period[, 1],
+                                        "\\bQuarterly\\b"),
+                             "QUARTERLY",
+                             ifelse(str_detect(primary.period[, 1],
+                                               "\\bSemi-Annual\\b"),
+                                    "SEMI_ANNUALLY",
+                                    "YEARLY"))
+    
+    for(i in 1:length(tickers)) {
+      
+      period.sel.pos <- which(option.names == "periodicitySelection")
+      
+      option.values[period.sel.pos] <- primary.period[i]
+      
+      bbg.data <- bdh(conn = conn,
+                      securities = tickers.type[i],
+                      fields = fields,
+                      start_date = startdate,
+                      end_date = enddate,
+                      option_names = option.names,
+                      option_values = option.values,
+                      override_fields = override.fields,
+                      override_values = override.values)
+      
+      if(nrow(bbg.data) > 0 & sum(duplicated(bbg.data[, 1])) == 0) {
+        
+        dates <- as.Date(unique(bbg.data[, 1]), format = "%Y-%m-%d")
+        
+        stopifnot(class(dates) == "Date")
+        
+        col.nas <- apply(is.na(bbg.data), 2, sum)
+        
+        col.nas.number <- which(col.nas == nrow(bbg.data))
+        
+        if(length(col.nas.number) > 0) {
+          
+          bbg.data[, col.nas.number] <- NA
+          
+        }
+        
+        adj.data[[i]] <- xts(as.matrix(bbg.data[, 2:ncol(bbg.data)],
+                                       nrow = length(dates),
+                                       ncol = ncol(bbg.data) - 1),
+                             order.by = dates,
+                             dimnames = list(NULL, fields))
+        
+      } else {
+        
+        adj.data[[i]] <- NA
+      
+      } 
+      
+    }
     
   }
   
@@ -210,129 +271,4 @@ HistData <- function(tickers = "GS US",
   return(adj.data)
   
 }
-  
-  
-
-
-
-  
-  if(length(fields) == 1 & length(tickers) > 1) {
-    
-    if(calendar.type == "FISCAL") {
-      
-      adj.data <- vector("list", length(tickers))
-      
-      names(adj.data) <- tickers
-      
-      primary.period <- bdp(conn = conn,
-                            securities = tickers.type,
-                            fields = "PRIMARY_PERIODICITY")
-      
-      primary.period <- ifelse(str_detect(primary.period[, 1],
-                                          "\\bQuarterly\\b"),
-                               "QUARTERLY",
-                        ifelse(str_detect(primary.period[, 1],
-                                          "\\bSemi-Annual\\b"),
-                               "SEMI_ANNUALLY",
-                               "QUARTERLY"))
-      
-      for(i in 1:length(tickers)) {
-        
-        period.sel.pos <- which(option.names == "periodicitySelection")
-        
-        option.values[period.sel.pos] <- primary.period[i]
-        
-        bbg.data <- bdh(conn = conn,
-                        securities = tickers.type[i],
-                        fields = fields,
-                        start_date = startdate,
-                        end_date = enddate,
-                        option_names = option.names,
-                        option_values = option.values,
-                        override_fields = override.fields,
-                        override_values = override.values)
-        
-        dates <- as.Date(unique(bbg.data[, 1]), format = "%Y-%m-%d")
-        
-        stopifnot(class(dates) == "Date")
-        
-        adj.data[[i]] <- xts(matrix(bbg.data[, 2],
-                                    nrow = length(dates),
-                                    ncol = 1,
-                                    dimnames = list(NULL, fields)),
-                             order.by = dates)
-        
-      }
-      
-    }
-    
-  }
-  
-
-  
-  if(length(fields) > 1 & length(tickers) > 1) {
-    
-    if(calendar.type == "FISCAL") {
-      
-      adj.data <- vector("list", length(tickers))
-      
-      names(adj.data) <- tickers
-      
-      primary.period <- bdp(conn = conn,
-                            securities = tickers.type,
-                            fields = "PRIMARY_PERIODICITY")
-      
-      primary.period <- ifelse(str_detect(primary.period[, 1],
-                                          "\\bQuarterly\\b"),
-                               "QUARTERLY",
-                        ifelse(str_detect(primary.period[, 1],
-                                          "\\bSemi-Annual\\b"),
-                               "SEMI_ANNUALLY",
-                               "QUARTERLY"))
-      
-      for(i in 1:length(tickers)) {
-        
-        period.sel.pos <- which(option.names == "periodicitySelection")
-        
-        option.values[period.sel.pos] <- primary.period[i]
-        
-        bbg.data <- bdh(conn = conn,
-                        securities = tickers.type[i],
-                        fields = fields,
-                        start_date = startdate,
-                        end_date = enddate,
-                        option_names = option.names,
-                        option_values = option.values,
-                        override_fields = override.fields,
-                        override_values = override.values)
-        
-        if(nrow(bbg.data) > 0 & sum(duplicated(bbg.data[, 1])) == 0) {
-          
-          dates <- as.Date(unique(bbg.data[, 1]), format = "%Y-%m-%d")
-          
-          stopifnot(class(dates) == "Date")
-          
-          col.nas <- apply(is.na(bbg.data), 2, sum)
-          
-          col.nas.number <- which(col.nas == nrow(bbg.data))
-          
-          if(length(col.nas.number) > 0) {
-            bbg.data[, col.nas.number] <- NA
-          }
-          
-          adj.data[[i]] <- xts(as.matrix(bbg.data[, 2:ncol(bbg.data)],
-                                         nrow = length(dates),
-                                         ncol = ncol(bbg.data) - 1,
-                                         dimnames = list(NULL, fields)),
-                               order.by = dates)
-          
-        } else {
-          adj.data[[i]] <- NA
-        } 
-        
-      }
-      
-    }
-    
-  }
   

@@ -49,7 +49,7 @@ HistData <- function(tickers = "GS US",
   
   conn <- blpConnect()
   
-  if(length(fields) == 1 & length(tickers) == 1) {
+  if(calendar.type == "CALENDAR" | calendar.type == "ACTUAL") {
     
     bbg.data <- bdh(conn = conn,
                     securities = tickers.type,
@@ -61,19 +61,160 @@ HistData <- function(tickers = "GS US",
                     override_fields = override.fields,
                     override_values = override.values)
     
-    dates <- as.Date(unique(bbg.data[, 1]), format = "%Y-%m-%d")
+    dates <- as.Date(unique(bbg.data[, "date"]), format = "%Y-%m-%d")
     
-    stopifnot(class(dates) == "Date")
+    dates <- sort(dates)
     
-    adj.data <- xts(as.matrix(bbg.data[, -1],
-                              nrow = length(dates),
-                              ncol = length(fields),
-                              dimnames = list(NULL, fields)),
-                    order.by = dates)
+    if(length(fields) == 1 & length(tickers) == 1) {
+      
+      adj.data <- xts(as.matrix(bbg.data[, -which(names(bbg.data) == "date")],
+                                nrow = length(dates),
+                                ncol = length(fields)),
+                      order.by = dates)
+      
+      colnames(adj.data) <- fields
+      
+    }
     
-    colnames(adj.data) <- fields
+    if(length(fields) > 1 & length(tickers) == 1) {
+      
+      adj.data <- xts(as.matrix(bbg.data[, -which(names(bbg.data) == "date")],
+                                nrow = length(dates),
+                                ncol = length(fields)),
+                      order.by = dates)
+      
+    }
+    
+    if(length(fields) == 1 & length(tickers) > 1) {
+      
+      adj.data <- xts(matrix(NA,
+                             nrow = length(dates),
+                             ncol = length(tickers),
+                             dimnames = list(NULL, tickers)),
+                      order.by = dates)
+      
+      for(i in 1:length(tickers)) {
+        
+        ticker.pos <- which(tickers.type[i] == bbg.data[, "ticker"])
+        
+        dates.match <- match(bbg.data[ticker.pos, "date"], as.character(dates))
+        
+        adj.data[dates.match, i] <- bbg.data[ticker.pos, fields]
+        
+      }
+      
+      # special case for monthly data observations across active and
+      # inactive tickers. Answer from Bloomberg support:
+      # "Our programmers have indicated that at this time
+      #  we are unable to support a trading calendar for 
+      #  all acquired tickers, so the acquired tickers will 
+      #  not respect holidays. We apologize for any inconvenience."
+      active.tickers <- bdp(conn = conn,
+                            securities = tickers.type,
+                            fields = "TRADE_STATUS")
+      
+      if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+        
+        inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
+        
+        adj.data[, inactive] <- na.locf(adj.data[, inactive],
+                                        maxgap = 1,
+                                        fromLast = TRUE)
+        
+        actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
+        
+        ticker.pos <- which(bbg.data[, "ticker"] == tickers.type[actv.pos])
+        
+        actv.dates <- as.Date(bbg.data[ticker.pos, "date"],
+                              format = "%Y-%m-%d")
+        
+        true.dates <- match(actv.dates, dates)
+        
+        adj.data <- adj.data[true.dates, ]
+
+      }      
+      
+    }
+    
+    if(length(fields) > 1 & length(tickers) > 1) {
+      
+      adj.data <- array(NA,
+                        dim = c(length(dates),
+                                length(tickers),
+                                length(fields)),
+                        dimnames = list(as.character(dates),
+                                        tickers,
+                                        fields))
+      
+      for(i in 1:length(tickers)) {
+        
+        ticker.pos <- which(tickers.type[i] == bbg.data[, "ticker"])
+        
+        dates.match <- match(bbg.data[ticker.pos, "date"], as.character(dates))
+        
+        temp.bbg <- bbg.data[ticker.pos, -1:-2]
+        
+        adj.data[dates.match, i, ] <- data.matrix(temp.bbg)
+        
+      }
+      
+      # special case for monthly data observations across active and
+      # inactive tickers. Answer from Bloomberg support:
+      # "Our programmers have indicated that at this time
+      #  we are unable to support a trading calendar for 
+      #  all acquired tickers, so the acquired tickers will 
+      #  not respect holidays. We apologize for any inconvenience."
+      
+      active.tickers <- bdp(conn = conn,
+                            securities = tickers.type,
+                            fields = "TRADE_STATUS")
+      
+      if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+        
+        inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
+        
+        for(i in 1:length(fields)) {
+          
+          adj.data[, inactive, i] <- na.locf(adj.data[, inactive, i],
+                                          maxgap = 1,
+                                          fromLast = TRUE)
+          
+        }
+        
+        actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
+        
+        ticker.pos <- which(bbg.data[, "ticker"] == tickers.type[actv.pos])
+        
+        actv.dates <- as.Date(bbg.data[ticker.pos, "date"],
+                              format = "%Y-%m-%d")
+        
+        true.dates <- match(actv.dates, dates)
+        
+        adj.data <- adj.data[true.dates,, ]
+        
+      }
+      
+      
+    }
     
   }
+  
+  if(calendar.type == "FISCAL") {
+    
+    
+    
+  }
+  
+  blpDisconnect(conn)
+  
+  return(adj.data)
+  
+}
+  
+  
+
+
+
   
   if(length(fields) == 1 & length(tickers) > 1) {
     
@@ -125,86 +266,9 @@ HistData <- function(tickers = "GS US",
       
     }
     
-    if(calendar.type == "CALENDAR" | calendar.type == "ACTUAL") {
-      
-      bbg.data <- bdh(conn = conn,
-                      securities = tickers.type,
-                      fields = fields,
-                      start_date = startdate,
-                      end_date = enddate,
-                      option_names = option.names,
-                      option_values = option.values,
-                      override_fields = override.fields,
-                      override_values = override.values)
-      
-      active.tickers <- bdp(conn = conn,
-                            securities = tickers.type,
-                            fields = "TRADE_STATUS")
-      
-      dates <- as.Date(unique(bbg.data[, 2]), format = "%Y-%m-%d")
-      
-      dates <- sort(dates)
-      
-      adj.data <- xts(matrix(NA,
-                             nrow = length(dates),
-                             ncol = length(tickers),
-                             dimnames = list(NULL, tickers)),
-                      order.by = dates)
-      
-      for(i in 1:length(tickers)) {
-        
-        ticker.pos <- which(tickers.type[i] == bbg.data[, "ticker"])
-        
-        dates.match <- match(bbg.data[ticker.pos, "date"], as.character(dates))
-        
-        adj.data[dates.match, i] <- bbg.data[ticker.pos, 3]
-        
-      }
-      
-      # This if statement exists due to a date error in Bloomberg's data
-      # base where inactive tickers don't have the same date string
-      # ...as active tickers creates an error in the unique date method
-      # used when all tickers are active 
-      if(any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
-        
-        actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
-        
-        ticker.pos <- which(bbg.data[, "ticker"] == tickers.type[actv.pos])
-        
-        actv.dates <- as.Date(bbg.data[ticker.pos, "date"],
-                              format = "%Y-%m-%d")
-        
-        true.dates <- match(actv.dates, dates)
-        
-        adj.data <- adj.data[true.dates, ]
-        
-      }
-      
-    }
-    
   }
   
-  if(length(fields) > 1 & length(tickers) == 1) {
-    
-    bbg.data <- bdh(conn = conn,
-                    securities = tickers.type,
-                    fields = fields,
-                    start_date = startdate,
-                    end_date = enddate,
-                    option_names = option.names,
-                    option_values = option.values,
-                    override_fields = override.fields,
-                    override_values = override.values)
-    
-    dates <- as.Date(unique(bbg.data[, 1]), format = "%Y-%m-%d")
-    
-    adj.data <- xts(as.matrix(bbg.data[, -1],
-                              nrow = length(dates),
-                              ncol = length(fields),
-                              dimnames = list(NULL, fields)),
-                    order.by = dates)
-    
-  }
+
   
   if(length(fields) > 1 & length(tickers) > 1) {
     
@@ -270,70 +334,5 @@ HistData <- function(tickers = "GS US",
       
     }
     
-    if(calendar.type == "CALENDAR" | calendar.type == "ACTUAL") {
-      
-      bbg.data <- bdh(conn = conn,
-                      securities = tickers.type,
-                      fields = fields,
-                      start_date = startdate,
-                      end_date = enddate,
-                      option_names = option.names,
-                      option_values = option.values,
-                      override_fields = override.fields,
-                      override_values = override.values)
-      
-      active.tickers <- bdp(conn = conn,
-                            securities = tickers.type,
-                            fields = "TRADE_STATUS")
-      
-      dates <- as.Date(unique(bbg.data[, 2]), format = "%Y-%m-%d")
-      
-      dates <- sort(dates)
-      
-      adj.data <- array(NA,
-                        dim = c(length(dates),
-                                length(tickers),
-                                length(fields)),
-                        dimnames = list(as.character(dates),
-                                        tickers,
-                                        fields))
-      
-      for(i in 1:length(tickers)) {
-        
-        ticker.pos <- which(tickers.type[i] == bbg.data[, "ticker"])
-        
-        dates.match <- match(bbg.data[ticker.pos, "date"], as.character(dates))
-        
-        temp.bbg <- bbg.data[ticker.pos, -1:-2]
-        
-        adj.data[dates.match, i, ] <- data.matrix(temp.bbg)
-        
-      }
-      
-      # This if statement exists due to a date error in Bloomberg's data
-      # base where inactive tickers don't have the same date string
-      # as active tickers
-      if(any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
-        
-        actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
-        
-        ticker.pos <- which(bbg.data[, "ticker"] == tickers.type[actv.pos])
-        
-        actv.dates <- as.Date(bbg.data[ticker.pos, "date"],
-                              format = "%Y-%m-%d")
-        
-        true.dates <- match(actv.dates, dates)
-        
-        adj.data <- adj.data[true.dates,, ]
-        
-      }
-      
-    }
-    
   }
   
-  blpDisconnect(conn)
-  
-  return(adj.data)
-  
-}

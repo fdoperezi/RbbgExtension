@@ -3,6 +3,8 @@ Title: Extends functionality of the Rbbg package
 Version: 1.0.0
 Authors@R: "Peter Garnry <pg@saxobank.com> [aut, cre]"
 Description: Collection of functions to get data from Bloomberg
+URL: http://github.com/pgarnry/RbbgExtension
+BugReports: http://github.com/pgarnry/RbbgExtension/issues
 Depends:
     R (>= 3.1.0)
 Imports:

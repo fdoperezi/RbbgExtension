@@ -17,12 +17,14 @@ HistData <- function(tickers = "GS US",
                      type = "Equity",
                      fields = "PX_LAST",
                      freq = "DAILY",
-                     currency = NULL,
                      startdate = "20140101",
                      enddate = "",
+                     currency = NULL,
                      non.trading.days = "NON_TRADING_WEEKDAYS",
                      non.trading.days.fill = "NIL_VALUE",
                      calendar.type = "CALENDAR",
+                     pricing = "PRICING_OPTION_PRICE",
+                     follow.dpdf = TRUE,
                      override.fields = NULL,
                      override.values = NULL) {
   
@@ -33,18 +35,19 @@ HistData <- function(tickers = "GS US",
                     "nonTradingDayFillMethod",
                     "periodicityAdjustment",
                     "adjustmentFollowDPDF",
-                    "currency")
+                    "pricingOption")
   
   option.values <- c(freq,
                      non.trading.days,
                      non.trading.days.fill,
                      calendar.type,
-                     "TRUE",
+                     follow.dpdf,
+                     pricing,
                      currency)
   
-  if(is.null(currency)) {
+  if(!is.null(currency)) {
     
-    option.names <- option.names[-which(option.names == "currency")]
+    option.names <- c(option.names, "currency")
     
   }
   

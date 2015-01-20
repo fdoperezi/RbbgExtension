@@ -1,6 +1,6 @@
 Package: RbbgExtension
 Title: Extends functionality of the Rbbg package
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: "Peter Garnry <pg@saxobank.com> [aut, cre]"
 Description: Collection of functions to more easily get financial data through Rbbg
 URL: http://github.com/pgarnry/RbbgExtension
@@ -10,5 +10,6 @@ Depends:
 Imports:
     Rbbg,
     xts,
-    zoo
+    zoo,
+    stringr
 License: GPL (>= 2)

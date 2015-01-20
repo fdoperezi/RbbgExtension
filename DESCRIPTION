@@ -10,6 +10,3 @@ Imports:
     xts,
     zoo
 License: GPL (>= 2)
-Suggests:
-    knitr
-VignetteBuilder: knitr

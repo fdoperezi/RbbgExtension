@@ -1,2 +1,8 @@
 # RbbgExtension
-Extends functionality of the Rbbg package
+The aim of **RbbgExtension** is to extend the functionality of the Rbbg package through more intuitive functions and in most cases output data in xts class. 
+
+Our work on **RbbgExtension** started as our use of the **Rbbg**, which is an excellent Java wrapper and be [found here](http://findata.org/rbloomberg/), for extracting financial data became cumbersome. We needed more flexibility and a more intuitive interface. In addition there are multiple special cases when handling financial data. Lately we converted our functions into an actual R package called **RbbgExtension** in order to share our work with others in the financial community. Because we cannot be alone in the universe wanting to extract financial data more easily.
+
+We wanted to get the package out on a public repo, even in a not complete version, so everyone could use it and report back with any issues. However, we are already using **RbbgExtension** extensively in our own production which includes backtesting of trading strategies, quick event-driven analyses and general financial data queries for charting.
+
+Our hope is that volunteers will eventually join our efforts because lots of code needs to be done and our list of future features is extensive. As a result we will often commit new changes to the master branch and push it to GitHub, so frequently checking for new versions is probably a good idea. The develop branch will be kept privately for now, but it may change in the future. We aim at writing a vignette in the future to make showcases of how the functions work and why we do certain things and the trade-offs when working with financial data. As we have focused on creating the package and get code done for own needs, the package does not include unit tests yet, but that will also be implemented later on, hopefully with help from volunteers.

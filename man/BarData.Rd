@@ -3,10 +3,9 @@
 \alias{BarData}
 \title{Function getting historical bar data}
 \usage{
-BarData(tickers = "AAPL US", type = "Equity",
-  start.date.time = "2014-01-01 09:30:00",
-  end.date.time = "2014-08-15 16:05:00", time.zone = "America/New_York",
-  interval = "5")
+BarData(tickers = "AAPL US", type = "Equity", start.date = "2014-01-01",
+  start.time = "09:30:00", end.date = NULL, end.time = NULL,
+  time.zone = "America/New_York", interval = "5")
 }
 \arguments{
 \item{tickers}{character vector specifying the tickers}
@@ -15,17 +14,17 @@ BarData(tickers = "AAPL US", type = "Equity",
 such as equities "Equity" or currencies "Curncy". The input is not
 case sensitive}
 
-\item{start.date.time}{a character string specifying the start date
-and time}
-
-\item{end.date.time}{a character string specifying the end date
-and time}
-
 \item{time.zone}{which time zone should be attached to the
 specified date and time}
 
 \item{interval}{a character string stating the bar interval
 in minutes. One minute is the highest frequency allowed}
+
+\item{start.date.time}{a character string specifying the start date
+and time}
+
+\item{end.date.time}{a character string specifying the end date
+and time}
 }
 \description{
 Function getting historical bar data

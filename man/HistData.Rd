@@ -4,9 +4,10 @@
 \title{Function getting historical Bloomberg data}
 \usage{
 HistData(tickers = "GS US", type = "Equity", fields = "PX_LAST",
-  freq = "DAILY", currency = NULL, startdate = "20140101", enddate = "",
+  freq = "DAILY", startdate = "20140101", enddate = "", currency = NULL,
   non.trading.days = "NON_TRADING_WEEKDAYS",
   non.trading.days.fill = "NIL_VALUE", calendar.type = "CALENDAR",
+  pricing = "PRICING_OPTION_PRICE", follow.dpdf = TRUE,
   override.fields = NULL, override.values = NULL)
 }
 \arguments{

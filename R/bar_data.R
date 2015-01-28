@@ -43,24 +43,37 @@
 
 BarData <- function(tickers = "AAPL US",
                     type = "Equity",
-                    start.date.time = "2014-01-01 09:30:00",
-                    end.date.time = "2014-08-15 16:05:00",
+                    start.date = "2014-01-01",
+                    start.time = "09:30:00",
+                    end.date = NULL,
+                    end.time = NULL,
                     time.zone = "America/New_York",
                     interval = "5") {
   
-  utc.start.time <- paste(format(with_tz(as.POSIXlt(start.date.time,
-                                                    tz = time.zone),
-                                         tzone = "GMT"),
-                                 usetz = FALSE),
-                          ".000",
-                          sep = "")
+  utc.start <- paste(start.date, start.time, sep = " ")
+  utc.start <- paste(format(with_tz(as.POSIXlt(utc.start,
+                                               tz = time.zone),
+                                    tzone = "GMT"),
+                            usetz = FALSE),
+                     ".000",
+                     sep = "")
   
-  utc.end.time <- paste(format(with_tz(as.POSIXlt(end.date.time,
-                                                  tz = time.zone),
-                                       tzone = "GMT"),
-                               usetz = FALSE),
-                        ".000",
-                        sep = "")
+  if(any(is.null(end.date), is.null(end.time))) {
+    
+    utc.end <- paste(Sys.Date(), "16:05:00", sep = " ")
+    
+  } else {
+    
+    utc.end <- paste(end.date, end.time, sep = "")
+    
+  }
+  
+  utc.end <- paste(format(with_tz(as.POSIXlt(utc.end,
+                                             tz = time.zone),
+                                  tzone = "GMT"),
+                          usetz = FALSE),
+                   ".000",
+                   sep = "")
   
   conn <- blpConnect()
   
@@ -71,8 +84,8 @@ BarData <- function(tickers = "AAPL US",
     bbg.data <- bar(conn = conn,
                     security = tickers.type,
                     field = "TRADE",
-                    start_date_time = utc.start.time,
-                    end_date_time = utc.end.time,
+                    start_date_time = utc.start,
+                    end_date_time = utc.end,
                     interval = interval,
                     option_names = "adjustmentFollowDPDF",
                     option_values = "TRUE")
@@ -87,7 +100,9 @@ BarData <- function(tickers = "AAPL US",
     
     trade.time <- as.POSIXlt(gsub("T", " ", bbg.data[, "time"]), tz = "GMT")
     
-    adj.data <- xts(bbg.data[, -1], order.by = trade.time) 
+    adj.data <- xts(bbg.data[, -1],
+                    order.by = trade.time,
+                    tzone = Sys.timezone())
     
     return(adj.data)
     
@@ -120,7 +135,9 @@ BarData <- function(tickers = "AAPL US",
       
       trade.time <- as.POSIXlt(gsub("T", " ", bbg.data[, "time"]), tz = "GMT")
       
-      adj.data[[i]] <- xts(as.matrix(bbg.data[, -1]), order.by = trade.time)
+      adj.data[[i]] <- xts(as.matrix(bbg.data[, -1]),
+                           order.by = trade.time,
+                           tzone = Sys.timezone())
       
     }
     

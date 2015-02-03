@@ -183,9 +183,11 @@ HistData <- function(tickers = "GS US",
         
         for(i in 1:length(fields)) {
           
-          adj.data[, inactive, i] <- na.locf(adj.data[, inactive, i],
-                                          maxgap = 1,
-                                          fromLast = TRUE)
+          temp.data <- xts(adj.data[, inactive, i], order.by = dates)
+          
+          adj.data[, inactive, i] <- na.locf(temp.data,
+                                             maxgap = 1,
+                                             fromLast = TRUE)
           
         }
         

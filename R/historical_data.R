@@ -103,7 +103,7 @@ HistData <- function(tickers = "GS US",
         
         dates.match <- match(bbg.data[ticker.pos, "date"], as.character(dates))
         
-        adj.data[dates.match, i] <- bbg.data[ticker.pos, fields]
+        adj.data[dates.match, i] <- as.numeric(bbg.data[ticker.pos, fields])
         
       }
       

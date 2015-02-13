@@ -23,17 +23,14 @@ BEst <- function(tickers = "GS US",
   
   conn <- blpConnect()
   
-  primary.period <- bdp(conn = conn,
-                        securities = tickers.type,
-                        fields = "PRIMARY_PERIODICITY")
+  earn.est <- bdp(conn = conn,
+                  securities = tickers.type,
+                  fields = c("BEST_EEPS_CUR_QTR",
+                             "BEST_EEPS_CUR_SEMI",
+                             "BEST_EEPS_CUR_YR"))
   
-  fperiod.override <- ifelse(str_detect(primary.period[, 1],
-                                        "\\bQuarterly\\b"),
-                             "1FQ",
-                             ifelse(str_detect(primary.period[, 1],
-                                               "\\bSemi-Annual\\b"),
-                                    "1FS",
-                                    "1FY"))
+  fperiod.override <- ifelse(!is.na(earn.est[, 1]), "1FQ",
+                             ifelse(!is.na(earn.est[, 2]), "1FS", "1FY"))
   
   override.fields <- c("BEST_FPERIOD_OVERRIDE")
   
@@ -45,16 +42,16 @@ BEst <- function(tickers = "GS US",
   
   if(length(tickers) == 1) {
     
-    bbg.data <- bdp(conn = conn,
+    adj.data <- bdp(conn = conn,
                     securities = tickers.type,
                     fields = fields,
                     override_fields = override.fields,
                     override_values = c(fperiod.override,
                                         currency))
     
-    adj.data <- matrix(bbg.data,
-                       dimnames = list(tickers,
-                                       fields))
+    adj.data$PERIOD <- fperiod.override
+    
+    rownames(adj.data) <- tickers
     
   } else {
     
@@ -76,6 +73,10 @@ BEst <- function(tickers = "GS US",
       adj.data[i, ] <- as.numeric(bbg.data)
       
     }
+    
+    adj.data <- as.data.frame(adj.data)
+    
+    adj.data$PERIOD <- fperiod.override
     
   }
   

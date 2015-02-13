@@ -10,6 +10,7 @@
 #' primary periodicity so the company's estimates are either
 #' quarterly, semi-annually or annually depending on the
 #' available period.
+#' @export
 #' @import Rbbg
 #' @import stringr
 

@@ -117,9 +117,8 @@ HistData <- function(tickers = "GS US",
                             securities = tickers.type,
                             fields = "TRADE_STATUS")
       
-      if(freq == "MONTHLY" |
-         freq == "QUARTERLY"&
-         any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+      if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE) |
+         freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
         
         inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
         
@@ -175,9 +174,8 @@ HistData <- function(tickers = "GS US",
                             securities = tickers.type,
                             fields = "TRADE_STATUS")
       
-      if(freq == "MONTHLY" |
-         freq == "QUARTERLY" &
-         any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+      if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE) |
+         freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
         
         inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
         

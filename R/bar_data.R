@@ -64,8 +64,6 @@ BarData <- function(tickers = "AAPL US",
                     time.zone = "America/New_York",
                     interval = "5") {
   
-  
-  
   utc.start <- paste(start.date, start.time, sep = " ")
   utc.start <- paste(format(with_tz(as.POSIXlt(utc.start,
                                                tz = time.zone),

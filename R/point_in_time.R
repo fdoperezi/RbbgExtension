@@ -9,13 +9,16 @@
 #' @param override_values   character vector specifying override values
 #' @export
 #' @import Rbbg
+#' @import xts
+#' @import stringr
 
 PointInTime <- function(tickers = "AAPL US",
                         type = "Equity",
-                        fields = "TRAIL_12M_EPS",
+                        fields = "SALES_REV_TURN",
                         currency = NULL,
-                        startdate = "20050101", 
-                        enddate = "") {
+                        startdate = "20050101",
+                        enddate = "",
+                        sh.out = FALSE) {
   
   conn <- blpConnect()
   
@@ -26,9 +29,33 @@ PointInTime <- function(tickers = "AAPL US",
   
   if(length(tickers.type) == 1 & length(fields) == 1) {
     
-    earn.dates <- bds(conn = conn,
-                      securities = tickers.type,
-                      fields = "ERN_ANN_DT_AND_PER")
+    #earn.dates <- bds(conn = conn,
+    #                  securities = tickers.type,
+    #                  fields = "ERN_ANN_DT_AND_PER")
+    
+    #This bulk data field returns a list of adjustment factors used to adjust prices and/or volumes for 
+    #stock splits, stock dividends, rights issues and spin-offs. Adjustment factors for normal and 
+    #abnormal cash dividends are not included.
+    #The field returns data in 4 unlabeled columns:
+    #Column 1 - Adjustment Date
+    #Column 2 - Adjustment Factor
+    #Column 3 - Operator Type (1=div, 2=mult, 3=add, 4=sub. Opposite for Volume)
+    #Column 4 - Flag (1=prices only, 2=volumes only, 3=prices and volumes)
+    
+    hist.adjust <- bds(conn = conn,
+                       securities = tickers.type,
+                       fields = "EQY_DVD_ADJUST_FACT")
+    
+    prices <- HistData(tickers = tickers,
+                       type = "Equity",
+                       fields = "PX_LAST",
+                       freq = "MONTHLY",
+                       startdate = startdate,
+                       enddate = enddate)
+    
+    dates <- as.Date(.indexDate(prices))
+    
+
     
     pp <- bdp(conn = conn,
               securities = tickers.type,
@@ -37,36 +64,26 @@ PointInTime <- function(tickers = "AAPL US",
     pp <- ifelse(str_detect(pp[, 1], "\\bQuarterly\\b"), "Q",
                  ifelse(str_detect(pp[, 1], "\\bSemi-Annual\\b"), "S", "Q"))
     
-    earn.dates <- earn.dates[grep("Q", earn.dates[, 2]), ]
-    
-    dates <- as.Date(earn.dates[, 1], format = "%Y-%m-%d")
-    startdate.adj <- as.Date(startdate, format = "%Y%m%d")
-    output.dates <- which(dates > startdate.adj)
-    
-    earn.dates <- earn.dates[output.dates, ]
-    earn.dates <- earn.dates[order(earn.dates[, 1]), ]
-    
-    sort.dates <- sort((dates[output.dates]))
-    
     output <- xts(matrix(NA,
-                         nrow = nrow(earn.dates),
+                         nrow = length(dates),
                          ncol = length(fields),
                          dimnames = list(NULL,
                                          fields)),
-                  order.by = sort.dates)
+                  order.by = dates)
     
-    for(i in 1:nrow(earn.dates)) {
+    "BS_SH_OUT"
+    
+    for(i in 1:length(dates)) {
       
-      output[i, ] <- bdp(conn = conn,
-                         securities = tickers.type,
-                         fields = fields,
-                         override_fields = c("FUNDAMENTAL_DATABASE_DATE",
-                                             "FILING_STATUS",
-                                             "FUND_PER"),
-                         override_values = c(gsub("-", "", sort.dates[i] + 1),
-                                             "OR",
-                                             pp))
-      
+      output[i] <- as.numeric(bdp(conn = conn,
+                                  securities = tickers.type,
+                                  fields = fields,
+                                  override_fields = c("FUNDAMENTAL_DATABASE_DATE",
+                                                      "FILING_STATUS",
+                                                      "FUND_PER"),
+                                  override_values = c(gsub("-", "", dates[i]),
+                                                      "OR",
+                                                      pp)))
       
     }
     

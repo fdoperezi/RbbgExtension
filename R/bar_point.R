@@ -1,4 +1,3 @@
-
 #' Function extracting the intraday price based on input date and time
 #' on input date and time variable
 #' @param data       a list of market bar data in the format created

@@ -38,14 +38,16 @@ HistIndexTickers <- function(index = "SPX",
                     override_fields = "END_DATE_OVERRIDE",
                     override_values = gsub("[[:punct:]]","",date.seq[i]))
     
-    
+    composite.ticker <- bdp(conn = conn,
+                            securities = paste(bbg.data[, "Index Member"], "Equity"),
+                            fields = "COMPOSITE_EXCH_CODE")
     
     hist.index.tickers.temp[[i]] <- paste(substr(bbg.data[, 1],
                                                  1,
                                                  nchar(bbg.data[, 1]) - 2),
-                                          "US",
+                                          composite.ticker[, i],
                                           sep = "")
-    
+
   }
   
   unique.tickers <- unique(unlist(hist.index.tickers.temp))

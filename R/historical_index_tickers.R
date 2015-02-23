@@ -45,7 +45,7 @@ HistIndexTickers <- function(index = "SPX",
     hist.index.tickers.temp[[i]] <- paste(substr(bbg.data[, 1],
                                                  1,
                                                  nchar(bbg.data[, 1]) - 2),
-                                          composite.ticker[, i],
+                                          composite.ticker[, 1],
                                           sep = "")
 
   }

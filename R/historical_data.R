@@ -123,7 +123,7 @@ HistData <- function(tickers = "GS US",
         inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
         
         adj.data[, inactive] <- na.locf(adj.data[, inactive],
-                                        maxgap = 1,
+                                        maxgap = 2,
                                         fromLast = TRUE)
         
         actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
@@ -184,7 +184,7 @@ HistData <- function(tickers = "GS US",
           temp.data <- xts(adj.data[, inactive, i], order.by = dates)
           
           adj.data[, inactive, i] <- na.locf(temp.data,
-                                             maxgap = 1,
+                                             maxgap = 2,
                                              fromLast = TRUE)
           
         }

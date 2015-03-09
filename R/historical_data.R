@@ -113,30 +113,35 @@ HistData <- function(tickers = "GS US",
       #  we are unable to support a trading calendar for 
       #  all acquired tickers, so the acquired tickers will 
       #  not respect holidays. We apologize for any inconvenience."
-      active.tickers <- bdp(conn = conn,
-                            securities = tickers.type,
-                            fields = "TRADE_STATUS")
       
-      if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE) |
-         freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+      if(type == "Equity") {
         
-        inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
+        active.tickers <- bdp(conn = conn,
+                              securities = tickers.type,
+                              fields = "TRADE_STATUS")
         
-        adj.data[, inactive] <- na.locf(adj.data[, inactive],
-                                        maxgap = 2,
-                                        fromLast = TRUE)
+        if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE) |
+             freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+          
+          inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
+          
+          adj.data[, inactive] <- na.locf(adj.data[, inactive],
+                                          maxgap = 2,
+                                          fromLast = TRUE)
+          
+          actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
+          
+          ticker.pos <- which(bbg.data[, "ticker"] == tickers.type[actv.pos])
+          
+          actv.dates <- as.Date(bbg.data[ticker.pos, "date"],
+                                format = "%Y-%m-%d")
+          
+          true.dates <- match(actv.dates, dates)
+          
+          adj.data <- adj.data[true.dates, ]
+          
+        }
         
-        actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
-        
-        ticker.pos <- which(bbg.data[, "ticker"] == tickers.type[actv.pos])
-        
-        actv.dates <- as.Date(bbg.data[ticker.pos, "date"],
-                              format = "%Y-%m-%d")
-        
-        true.dates <- match(actv.dates, dates)
-        
-        adj.data <- adj.data[true.dates, ]
-
       }      
       
     }
@@ -170,38 +175,41 @@ HistData <- function(tickers = "GS US",
       #  all acquired tickers, so the acquired tickers will 
       #  not respect holidays. We apologize for any inconvenience."
       
-      active.tickers <- bdp(conn = conn,
-                            securities = tickers.type,
-                            fields = "TRADE_STATUS")
-      
-      if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE) |
-         freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+      if(type == "Equity") {
         
-        inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
+        active.tickers <- bdp(conn = conn,
+                              securities = tickers.type,
+                              fields = "TRADE_STATUS")
         
-        for(i in 1:length(fields)) {
+        if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE) |
+             freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
           
-          temp.data <- xts(adj.data[, inactive, i], order.by = dates)
+          inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
           
-          adj.data[, inactive, i] <- na.locf(temp.data,
-                                             maxgap = 2,
-                                             fromLast = TRUE)
+          for(i in 1:length(fields)) {
+            
+            temp.data <- xts(adj.data[, inactive, i], order.by = dates)
+            
+            adj.data[, inactive, i] <- na.locf(temp.data,
+                                               maxgap = 2,
+                                               fromLast = TRUE)
+            
+          }
+          
+          actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
+          
+          ticker.pos <- which(bbg.data[, "ticker"] == tickers.type[actv.pos])
+          
+          actv.dates <- as.Date(bbg.data[ticker.pos, "date"],
+                                format = "%Y-%m-%d")
+          
+          true.dates <- match(actv.dates, dates)
+          
+          adj.data <- adj.data[true.dates,, ]
           
         }
         
-        actv.pos <- which(active.tickers[, "TRADE_STATUS"] == TRUE)[1]
-        
-        ticker.pos <- which(bbg.data[, "ticker"] == tickers.type[actv.pos])
-        
-        actv.dates <- as.Date(bbg.data[ticker.pos, "date"],
-                              format = "%Y-%m-%d")
-        
-        true.dates <- match(actv.dates, dates)
-        
-        adj.data <- adj.data[true.dates,, ]
-        
       }
-      
       
     }
     

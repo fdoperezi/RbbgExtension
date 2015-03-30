@@ -3,14 +3,23 @@
 \alias{HistEcoDates}
 \title{Function getting historical Bloomberg data}
 \usage{
-HistEcoDates(tickers = "EURR002W", startdate = "20000101")
+HistEcoDates(tickers = "EURR002W", startdate = "20000101",
+  append.values = FALSE)
 }
 \arguments{
-\item{tickers}{character vector specifying the securities}
+\item{tickers}{character vector specifying the macro index}
 
-\item{startdate}{numeric specified as "20000101" for "2000-01-01"}
+\item{startdate}{numeric specifying date as "20000101" for "2000-01-01"}
+
+\item{append.values}{boolean specifying whether macro data should be
+appended to output}
 }
 \description{
 Function getting historical Bloomberg data
+}
+\details{
+The reason why the append.values option exist is that release
+figures does not always make sense for a macro series such as "EURR002W Index"
+related to ECB Main Refinancing Operations Announcement Rate
 }
 

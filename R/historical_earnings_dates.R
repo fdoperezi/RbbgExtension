@@ -1,19 +1,23 @@
-#' Get historical earnings dates across stocks
+#' Get historical earnings dates and figures across stocks
 #' 
 #' The function works for one or multiple tickers across the
 #' equity class
 #' 
 #' @param tickers Character vector specifying the ticker code(s)
 #' @details For a single ticker the function returns a data
-#' frame containing historical earnings release dates and the
-#' reporting period.
+#' frame containing historical earnings reporting period, 
+#' release dates and earnings figures.
 #' 
 #' For multiple tickers the function returns a list of data
 #' frames containing the same information.
 #' 
+#' The Announcement Time column is in local time.
+#' 
+#' The last row contains the next future earnings release 
+#' including consensus EPS estimate.
+#' 
 #' @export
 #' @import Rbbg
-#' @import stringr
 
 HistEarnDates <- function(tickers = "JPM US") {
   
@@ -23,41 +27,13 @@ HistEarnDates <- function(tickers = "JPM US") {
   
   bbg.data <- bds(conn = conn,
                   securities = tickers.type,
-                  fields = "ERN_ANN_DT_AND_PER")
-  
-  if(length(tickers) == 1) {
-    
-    primary.period <- bdp(conn = conn,
-                          securities = tickers.type,
-                          fields = "PRIMARY_PERIODICITY")
-    
-    primary.period <- ifelse(str_detect(primary.period[, 1],
-                                        "\\bQuarterly\\b"), "Q",
-                      ifelse(str_detect(primary.period[, 1],
-                                        "\\bSemi-Annual\\b"), "S", NA))
-    
-    output <- bbg.data[order(bbg.data[, 1]), ]
-    
-    period.match <- str_detect(output[, 2], primary.period)
-   
-    output <- output[period.match, ]
-    
-  }
+                  fields = "EARN_ANN_DT_TIME_HIST_WITH_EPS")
   
   if(length(tickers) > 1) {
     
     output <- vector("list", length(tickers))
     
     names(output) <- tickers
-    
-    primary.period <- bdp(conn = conn,
-                          securities = tickers.type,
-                          fields = "PRIMARY_PERIODICITY")
-    
-    primary.period <- ifelse(str_detect(primary.period[, 1],
-                                        "\\bQuarterly\\b"), "Q",
-                             ifelse(str_detect(primary.period[, 1],
-                                               "\\bSemi-Annual\\b"), "S", NA))
     
     ticker.levels <- levels(bbg.data[, "ticker"])
     
@@ -67,14 +43,14 @@ HistEarnDates <- function(tickers = "JPM US") {
       
       adj.data <- bbg.data[ticker.pos, ]
       
-      adj.data <- adj.data[order(adj.data[, 2]), ]
-      
-      period.match <- str_detect(adj.data[, 3], primary.period[i])
-      
-      output[[i]] <- data.frame(adj.data[period.match, -1],
+      output[[i]] <- data.frame(adj.data[order(adj.data[, "Announcement.Date"]), -1],
                                 row.names = NULL)
       
     }
+    
+  } else {
+    
+    output <- bbg.data[order(bbg.data[, "Announcement Date"]), ]
     
   }
 

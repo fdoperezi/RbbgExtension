@@ -74,7 +74,7 @@ BarData <- function(tickers = "AAPL US",
   
   if(any(is.null(end.date), is.null(end.time))) {
     
-    utc.end <- paste(Sys.Date(), "16:05:00", sep = " ")
+    utc.end <- paste(Sys.Date(), "00:00:00", sep = " ")
     
   } else {
     
@@ -104,14 +104,6 @@ BarData <- function(tickers = "AAPL US",
                     option_names = "adjustmentFollowDPDF",
                     option_values = "TRUE")
     
-    non.volume.bars <- which(bbg.data[, "volume"] == 0)
-    
-    if(length(non.volume.bars) > 0) {
-      
-      bbg.data <- bbg.data[-non.volume.bars, ]
-      
-    }
-    
     trade.time <- as.POSIXlt(gsub("T", " ", bbg.data[, "time"]), tz = "GMT")
     
     adj.data <- xts(bbg.data[, -1],
@@ -138,14 +130,6 @@ BarData <- function(tickers = "AAPL US",
                       interval = interval,
                       option_names = "adjustmentFollowDPDF",
                       option_values = "TRUE")
-      
-      non.volume.bars <- which(bbg.data[, "volume"] == 0)
-      
-      if(length(non.volume.bars) > 0) {
-        
-        bbg.data <- bbg.data[-non.volume.bars, ]
-        
-      }
       
       trade.time <- as.POSIXlt(gsub("T", " ", bbg.data[, "time"]), tz = "GMT")
       

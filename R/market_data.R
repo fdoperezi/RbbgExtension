@@ -1,13 +1,14 @@
-#' Function that returns market data (Open, High, Low, Close, Volume)
-#' @param tickers Character vector of ticker names (see details)
-#' @param type Character that specifying instrument type (see details)
+
+#' Function that returns market data (Open, High, Low, Close, Volume, VWAP)
+#' @param tickers   a character vector of ticker names (see details)
+#' @param type      a character that specifying instrument type (see details)
 #' @details The function returns conventional market data such as open,
-#' high, low, close, volume. The output object is either a xts
-#' object or array depending on the number of tickers provided (see details).
+#'   high, low, close, volume and VWAP. The output object is either a xts
+#'   object or array depending on the number of tickers provided (see details).
 #' 
 #' Tickers are structured as symbols together with the exchange code e.g.
-#' AAPL US for Apple across aggregate US exchanges (composite code) and
-#' AAPL UW for Apple's price data from NASDAQ Global Select
+#'   AAPL US for Apple across aggregate US exchanges (composite code) and
+#'   AAPL UW for Apple's price data from NASDAQ Global Select
 #' 
 #' @export
 #' @import Rbbg
@@ -47,26 +48,27 @@ MarketData <- function(tickers = "AAPL US",
                        non.trading.days.fill)
   }
   
-  bbg.data <- bdh(conn = conn,
-                  securities = paste(tickers,
-                                     type,
-                                     sep = " "),
-                  fields = c("PX_OPEN",
-                             "PX_HIGH",
-                             "PX_LOW",
-                             "PX_LAST",
-                             "PX_VOLUME"),
-                  start_date = startdate,
-                  end_date = enddate,
-                  option_names = option.names,
-                  option_values = option.values)
+  bloomberg.data <- bdh(conn = conn,
+                        securities = paste(tickers,
+                                           type,
+                                           sep = " "),
+                        fields = c("PX_OPEN",
+                                   "PX_HIGH",
+                                   "PX_LOW",
+                                   "PX_LAST",
+                                   "PX_VOLUME",
+                                   "EQY_WEIGHTED_AVG_PX"),
+                        start_date = startdate,
+                        end_date = enddate,
+                        option_names = option.names,
+                        option_values = option.values)
   
   blpDisconnect(conn)
   
   if(length(tickers) > 1) {  
-    dates <- as.Date(unique(bbg.data[, 2]), format = "%Y-%m-%d")
+    dates <- as.Date(unique(bloomberg.data[, 2]), format = "%Y-%m-%d")
   } else {
-    dates <- as.Date(unique(bbg.data[, 1]), format = "%Y-%m-%d")
+    dates <- as.Date(unique(bloomberg.data[, 1]), format = "%Y-%m-%d")
   }  
   
   stopifnot(class(dates) == "Date")
@@ -75,13 +77,13 @@ MarketData <- function(tickers = "AAPL US",
     adj.data <- array(NA,
                       dim = c(length(dates),
                               length(tickers),
-                              ncol(bbg.data) - 2),
+                              ncol(bloomberg.data) - 2),
                       dimnames = list(as.character(dates), 
                                       tickers, 
-                                      colnames(bbg.data[, 3:8])))
+                                      colnames(bloomberg.data[, 3:8])))
     
-    for(i in 1:(ncol(bbg.data) - 2)) {
-      adj.data[,, i] <- matrix(bbg.data[, 2 + i],
+    for(i in 1:(ncol(bloomberg.data) - 2)) {
+      adj.data[,, i] <- matrix(bloomberg.data[, 2 + i],
                                nrow = length(dates),
                                ncol = length(tickers))
     }
@@ -89,7 +91,7 @@ MarketData <- function(tickers = "AAPL US",
   }
   
   if(length(tickers) == 1) {
-    adj.data <- xts(as.matrix(bbg.data[, -1]), order.by = dates)
+    adj.data <- xts(as.matrix(bloomberg.data[, -1]), order.by = dates)
   }
   
   return(adj.data)

@@ -3,8 +3,8 @@
 \alias{BarData}
 \title{Get historical bar data on financial instruments}
 \usage{
-BarData(tickers = "AAPL US", type = "Equity", start.date = "2014-01-01",
-  start.time = "09:30:00", end.date = NULL, end.time = NULL,
+BarData(tickers = "AAPL US", type = "Equity",
+  start.date.time = "2015-01-01 09:30:00", end.date.time = NULL,
   time.zone = "America/New_York", interval = "5")
 }
 \arguments{
@@ -13,19 +13,14 @@ BarData(tickers = "AAPL US", type = "Equity", start.date = "2014-01-01",
 \item{type}{Specify security class such as equities "Equity" or
 currencies "Curncy". The input is not case sensitive.}
 
-\item{start.date}{A character vector specifying the start date in
-date class format. See details.}
+\item{start.date.time}{A character vector specifying the start date and
+time in POSIXct class format. See details.}
 
-\item{start.time}{A character vector specifying the start time.
-See details.}
-
-\item{end.date}{A character vector specifying the start date in
-data class format.}
-
-\item{end.time}{A character vector.}
+\item{end.date.time}{A character vector specifying the end date and
+time in POSIXct class format. See details.}
 
 \item{time.zone}{The time zone should be attached to the
-specified date and time. See details.}
+specified date and time. Default time zone is America/New_York. See details.}
 
 \item{interval}{A character vector stating the bar interval in
 minutes. One minute is the highest frequency allowed.}
@@ -39,15 +34,13 @@ In the current version the function has only traded bars as
 its default input. Bid and ask bar data points are possible and
 will be added in the future.
 
-The date inputs should follow R's Date Class format "\%Y-\%m-\%d" e.g.
-"2014-01-01" for January 1, 2014. The end date's default value is NULL
-which the function interprets as today. Time inputs should the standard
-POSIX format "\%H:\%M:\%S" e.g. "09:30:00".
+The date inputs should follow the POSIXct format "\%Y-\%m-\%d \%H:\%M:\%S".
+The end date's default value is NULL which the function interprets as today.
 
 The time zone input is added to make it easier to set times, as the
 local time for when the exchange is open never changes, e.g. always
 09:30 to 16:00 for NYSE and NASDAQ unless on a holiday, whereas
-GMT changes two times a year because of daylight saving.
+GMT changes two times a year because of daylight savings time.
 
 The data output is a xts object. For multiple tickers the xts
 objects are stored in a list as missing bar data can in some

@@ -6,30 +6,25 @@
 #' @param tickers Character vector specifying the ticker code(s)
 #' @param type Specify security class such as equities "Equity" or
 #' currencies "Curncy". The input is not case sensitive.
-#' @param start.date A character vector specifying the start date in 
-#' date class format. See details.
-#' @param start.time A character vector specifying the start time.
-#' See details.
-#' @param end.date A character vector specifying the start date in
-#' data class format.
-#' @param end.time A character vector.
+#' @param start.date.time A character vector specifying the start date and
+#' time in POSIXct class format. See details.
+#' @param end.date.time A character vector specifying the end date and
+#' time in POSIXct class format. See details.
 #' @param time.zone The time zone should be attached to the
-#' specified date and time. See details.
+#' specified date and time. Default time zone is America/New_York. See details.
 #' @param interval A character vector stating the bar interval in 
 #' minutes. One minute is the highest frequency allowed.
 #' @details In the current version the function has only traded bars as 
 #' its default input. Bid and ask bar data points are possible and 
 #' will be added in the future.
 #' 
-#' The date inputs should follow R's Date Class format "\%Y-\%m-\%d" e.g.
-#' "2014-01-01" for January 1, 2014. The end date's default value is NULL 
-#' which the function interprets as today. Time inputs should the standard 
-#' POSIX format "\%H:\%M:\%S" e.g. "09:30:00".
+#' The date inputs should follow the POSIXct format "\%Y-\%m-\%d \%H:\%M:\%S".
+#' The end date's default value is NULL which the function interprets as today.
 #' 
 #' The time zone input is added to make it easier to set times, as the 
 #' local time for when the exchange is open never changes, e.g. always 
 #' 09:30 to 16:00 for NYSE and NASDAQ unless on a holiday, whereas 
-#' GMT changes two times a year because of daylight saving.
+#' GMT changes two times a year because of daylight savings time.
 #' 
 #' The data output is a xts object. For multiple tickers the xts 
 #' objects are stored in a list as missing bar data can in some 
@@ -57,32 +52,25 @@
 
 BarData <- function(tickers = "AAPL US",
                     type = "Equity",
-                    start.date = "2014-01-01",
-                    start.time = "09:30:00",
-                    end.date = NULL,
-                    end.time = NULL,
+                    start.date.time = "2015-01-01 09:30:00",
+                    end.date.time = NULL,
                     time.zone = "America/New_York",
                     interval = "5") {
   
-  utc.start <- paste(start.date, start.time, sep = " ")
-  utc.start <- paste(format(with_tz(as.POSIXlt(utc.start,
+  utc.start <- paste(format(with_tz(as.POSIXlt(start.date.time,
                                                tz = time.zone),
                                     tzone = "GMT"),
                             usetz = FALSE),
                      ".000",
                      sep = "")
   
-  if(any(is.null(end.date), is.null(end.time))) {
+  if(is.null(end.date.time)) {
     
-    utc.end <- paste(Sys.Date(), "00:00:00", sep = " ")
-    
-  } else {
-    
-    utc.end <- paste(end.date, end.time, sep = "")
+    end.date.time <- paste(Sys.Date(), "00:00:00", sep = " ")
     
   }
   
-  utc.end <- paste(format(with_tz(as.POSIXlt(utc.end,
+  utc.end <- paste(format(with_tz(as.POSIXlt(end.date.time,
                                              tz = time.zone),
                                   tzone = "GMT"),
                           usetz = FALSE),
@@ -125,8 +113,8 @@ BarData <- function(tickers = "AAPL US",
       bbg.data <- bar(conn = conn,
                       security = tickers.type[i],
                       field = "TRADE",
-                      start_date_time = utc.start.time,
-                      end_date_time = utc.end.time,
+                      start_date_time = utc.start,
+                      end_date_time = utc.end,
                       interval = interval,
                       option_names = "adjustmentFollowDPDF",
                       option_values = "TRUE")

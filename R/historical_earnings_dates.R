@@ -14,7 +14,7 @@
 #' The Announcement Time column is in local time.
 #' 
 #' The last row contains the next future earnings release 
-#' including consensus EPS estimate.
+#' including consensus EPS estimate for active tickers.
 #' 
 #' @export
 #' @import Rbbg
@@ -25,35 +25,36 @@ HistEarnDates <- function(tickers = "JPM US") {
   
   conn <- blpConnect()
   
-  bbg.data <- bds(conn = conn,
-                  securities = tickers.type,
-                  fields = "EARN_ANN_DT_TIME_HIST_WITH_EPS")
-  
-  if(length(tickers) > 1) {
+  if(length(tickers) == 1) {
     
-    output <- vector("list", length(tickers))
-    
-    names(output) <- tickers
-    
-    ticker.levels <- levels(bbg.data[, "ticker"])
-    
-    for(i in 1:length(tickers)) {
-      
-      ticker.pos <- which(bbg.data[, "ticker"] == ticker.levels[i])
-      
-      adj.data <- bbg.data[ticker.pos, ]
-      
-      output[[i]] <- data.frame(adj.data[order(adj.data[, "Announcement.Date"]), -1],
-                                row.names = NULL)
-      
-    }
-    
-  } else {
+    bbg.data <- bds(conn = conn,
+                    securities = tickers.type,
+                    fields = "EARN_ANN_DT_TIME_HIST_WITH_EPS")
     
     output <- bbg.data[order(bbg.data[, "Announcement Date"]), ]
     
+  } else {
+    
+    output <- vector("list", length(tickers))
+      
+    names(output) <- tickers
+        
+    for(i in 1:length(tickers)) {
+      
+      bbg.data <- bds(conn = conn,
+                      securities = tickers.type[i],
+                      fields = "EARN_ANN_DT_TIME_HIST_WITH_EPS")
+      
+      if(any(colnames(bbg.data) == "Announcement Date")) {
+        
+        output[[i]] <- bbg.data[order(bbg.data[, "Announcement Date"]), ]
+        
+      }
+      
+    }
+    
   }
-
+  
   return(output)
   
 }

@@ -23,6 +23,6 @@ frames containing the same information.
 The Announcement Time column is in local time.
 
 The last row contains the next future earnings release
-including consensus EPS estimate.
+including consensus EPS estimate for active tickers.
 }
 

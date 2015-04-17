@@ -24,8 +24,8 @@ MarketData <- function(tickers = "AAPL US",
                        enddate = "",
                        non.trading.days = "NON_TRADING_WEEKDAYS",
                        non.trading.days.fill = "NIL_VALUE") {
-
-  conn <- blpConnect()
+  
+  tickers.type <- paste(tickers, type, sep = " ")
   
   if(is.null(currency)) {
     
@@ -51,10 +51,10 @@ MarketData <- function(tickers = "AAPL US",
     
   }
   
+  conn <- blpConnect()
+  
   bbg.data <- bdh(conn = conn,
-                  securities = paste(tickers,
-                                     type,
-                                     sep = " "),
+                  securities = tickers.type,
                   fields = c("PX_OPEN",
                              "PX_HIGH",
                              "PX_LOW",
@@ -69,16 +69,8 @@ MarketData <- function(tickers = "AAPL US",
   
   column.names <- c("open", "high", "low", "close", "volume")
   
-  if(length(tickers) > 1) {
+  dates <- sort(as.Date(unique(bbg.data[, "date"]), format = "%Y-%m-%d"))
     
-    dates <- as.Date(unique(bbg.data[, 2]), format = "%Y-%m-%d")
-    
-  } else {
-    
-    dates <- as.Date(unique(bbg.data[, 1]), format = "%Y-%m-%d")
-    
-  }  
-  
   stopifnot(class(dates) == "Date")
   
   if(length(tickers) > 1) {  
@@ -91,11 +83,12 @@ MarketData <- function(tickers = "AAPL US",
                                       tickers, 
                                       column.names))
     
-    for(i in 1:(ncol(bbg.data) - 2)) {
+    for(i in 1:length(tickers.type)) {
       
-      adj.data[,, i] <- matrix(bbg.data[, 2 + i],
-                               nrow = length(dates),
-                               ncol = length(tickers))
+      ticker.match <- which(bbg.data[, "ticker"] == tickers.type[i])
+      date.match <- match(bbg.data[ticker.match, "date"], as.character(dates))
+      
+      adj.data[date.match, i, ] <- as.matrix(bbg.data[ticker.match, 3:ncol(bbg.data)])
       
     }
     

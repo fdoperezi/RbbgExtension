@@ -66,7 +66,7 @@ BarData <- function(tickers = "AAPL US",
   
   if(is.null(end.date.time)) {
     
-    end.date.time <- paste(Sys.Date(), "00:00:00", sep = " ")
+    end.date.time <- paste(Sys.Date(), "23:59:00", sep = " ")
     
   }
   

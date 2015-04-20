@@ -23,31 +23,25 @@ MarketData <- function(tickers = "AAPL US",
                        startdate = "20140101",
                        enddate = "",
                        non.trading.days = "NON_TRADING_WEEKDAYS",
-                       non.trading.days.fill = "NIL_VALUE") {
+                       non.trading.days.fill = "NIL_VALUE",
+                       follow.dpdf = TRUE) {
   
   tickers.type <- paste(tickers, type, sep = " ")
   
-  if(is.null(currency)) {
+  option.names <- c("periodicitySelection",
+                    "nonTradingDayFillOption",
+                    "nonTradingDayFillMethod",
+                    "adjustmentFollowDPDF")
+  
+  option.values <- c(freq,
+                     non.trading.days,
+                     non.trading.days.fill,
+                     follow.dpdf,
+                     currency)
+  
+  if(!is.null(currency)) {
     
-    option.names  <- c("periodicitySelection",
-                       "nonTradingDayFillOption",
-                       "nonTradingDayFillMethod")
-    
-    option.values <- c(freq,
-                       non.trading.days,
-                       non.trading.days.fill)
-    
-  } else {
-    
-    option.names  <- c("periodicitySelection",
-                       "currency",
-                       "nonTradingDayFillOption",
-                       "nonTradingDayFillMethod")
-    
-    option.values <- c(freq,
-                       currency,
-                       non.trading.days,
-                       non.trading.days.fill)
+    option.names <- c(option.names, "currency")
     
   }
   

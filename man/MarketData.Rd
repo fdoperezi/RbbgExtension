@@ -6,7 +6,7 @@
 MarketData(tickers = "AAPL US", type = "Equity", freq = "DAILY",
   currency = NULL, startdate = "20140101", enddate = "",
   non.trading.days = "NON_TRADING_WEEKDAYS",
-  non.trading.days.fill = "NIL_VALUE")
+  non.trading.days.fill = "NIL_VALUE", follow.dpdf = TRUE)
 }
 \arguments{
 \item{tickers}{Character vector of ticker names (see details)}

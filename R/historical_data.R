@@ -7,6 +7,11 @@
 #'                   price point extraction (see details)
 #' @param freq       a character string specifying time frequency
 #' @param currency   a character string specifying the currency
+#' @details Historical data on monthly and quarterly frequency
+#' are exported with Index Class 'yearmon' and 'yearqtr'
+#' respectively as tickers across various markets do have the
+#' same month end dates. Using this methodology ensure that
+#' data is aligned properly.
 #' @export
 #' @import Rbbg
 #' @import xts
@@ -65,8 +70,22 @@ HistData <- function(tickers = "GS US",
                     override_fields = override.fields,
                     override_values = override.values)
     
-    dates <- as.Date(unique(bbg.data[, "date"]), format = "%Y-%m-%d")
-    
+    if(freq == "MONTHLY") {
+      
+      dates <- unique(as.yearmon(as.Date(bbg.data[, "date"])))
+      
+    } else
+      
+    if(freq == "QUARTERLY") {
+      
+      dates <- unique(as.yearqtr(as.Date(bbg.data[, "date"])))
+      
+    } else {
+      
+      dates <- as.Date(unique(bbg.data[, "date"]), format = "%Y-%m-%d")
+      
+    }
+        
     dates <- sort(dates)
     
     if(length(fields) == 1 & length(tickers) == 1) {
@@ -101,10 +120,31 @@ HistData <- function(tickers = "GS US",
         
         ticker.pos <- which(tickers.type[i] == bbg.data[, "ticker"])
         
-        dates.match <- match(bbg.data[ticker.pos, "date"], as.character(dates))
+        if(freq == "MONTHLY" & length(ticker.pos) > 0) {
+          
+          ticker.dates <- as.yearmon(as.Date(bbg.data[ticker.pos, "date"]))
+          
+        } else
         
-        adj.data[dates.match, i] <- as.numeric(bbg.data[ticker.pos, fields])
+        if(freq == "QUARTERLY" & length(ticker.pos) > 0) {
+          
+          ticker.dates <- as.yearqtr(as.Date(bbg.data[ticker.pos, "date"]))
+          
+        } else {
+          
+          ticker.dates <- as.Date(bbg.data[ticker.pos, "date"])
+          
+        }
         
+        dates.match <- match(ticker.dates, dates)
+        
+        if(length(dates.match) > 0) {
+          
+          adj.data[dates.match, i] <- as.numeric(bbg.data[ticker.pos, fields])
+          
+          
+        }
+
       }
       
       # special case for monthly data observations across active and
@@ -121,7 +161,7 @@ HistData <- function(tickers = "GS US",
                               fields = "TRADE_STATUS")
         
         if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE) |
-             freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+           freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
           
           inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
           
@@ -160,11 +200,32 @@ HistData <- function(tickers = "GS US",
         
         ticker.pos <- which(tickers.type[i] == bbg.data[, "ticker"])
         
-        dates.match <- match(bbg.data[ticker.pos, "date"], as.character(dates))
+        if(freq == "MONTHLY" & length(ticker.pos) > 0) {
+          
+          ticker.dates <- as.yearmon(as.Date(bbg.data[ticker.pos, "date"]))
+          
+        } else
+          
+          if(freq == "QUARTERLY" & length(ticker.pos) > 0) {
+            
+            ticker.dates <- as.yearqtr(as.Date(bbg.data[ticker.pos, "date"]))
+            
+          } else {
+            
+            ticker.dates <- as.Date(bbg.data[ticker.pos, "date"])
+            
+          }
         
-        temp.bbg <- bbg.data[ticker.pos, -1:-2]
+        dates.match <- match(ticker.dates, dates)
         
-        adj.data[dates.match, i, ] <- data.matrix(temp.bbg)
+        if(length(dates.match) > 0) {
+          
+          temp.bbg <- bbg.data[ticker.pos, -1:-2]
+          
+          adj.data[dates.match, i, ] <- data.matrix(temp.bbg)
+          
+          
+        }
         
       }
       
@@ -182,7 +243,7 @@ HistData <- function(tickers = "GS US",
                               fields = "TRADE_STATUS")
         
         if(freq == "MONTHLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE) |
-             freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
+           freq == "QUARTERLY" & any(active.tickers[, "TRADE_STATUS"] == FALSE)) {
           
           inactive <- which(active.tickers[, "TRADE_STATUS"] == FALSE)
           

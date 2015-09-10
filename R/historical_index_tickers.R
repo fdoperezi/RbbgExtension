@@ -35,7 +35,9 @@ HistIndexTickers <- function(index = "SPX",
                            startdate = startdate,
                            enddate = enddate)
   
-  date.seq <- as.Date(.indexDate(index.prices), origin = "1970-01-01")
+  date.seq <- ifelse(freq == "QUARTERLY", as.Date(index(index.prices),frac=1),
+              ifelse(freq == "MONTHLY", as.Date(index(index.prices),frac=1),
+                     index(index.prices)))
   
   hist.index.tickers.temp <- vector("list", length(date.seq))
   

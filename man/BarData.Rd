@@ -4,7 +4,7 @@
 \alias{BarData}
 \title{Get historical bar data on financial instruments}
 \usage{
-BarData(tickers = "AAPL US", type = "Equity",
+BarData(tickers = "AAPL US", type = "Equity", event = "TRADE",
   start.date.time = "2015-01-01 09:30:00", end.date.time = NULL,
   time.zone = "America/New_York", interval = "5")
 }
